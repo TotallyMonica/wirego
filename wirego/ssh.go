@@ -3,7 +3,6 @@ package wirego
 import (
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"strings"
@@ -38,23 +37,25 @@ func (w Wireguard) getSSHHostConfig(host string) (*sshHostConfig, error) {
 
 	sshConfigFile, err := os.Open(path)
 	if err != nil {
-		log.Fatalf("Failed to open SSH config: %s", err)
+		return nil, fmt.Errorf("failed to open SSH config: %s", err)
 	}
+	defer sshConfigFile.Close()
+
 	sshConfig, err := ssh_config.Decode(sshConfigFile)
 	if err != nil {
-		log.Fatalf("Failed to load SSH config: %s", err)
+		return nil, fmt.Errorf("failed to load SSH config: %s", err)
 	}
 	user, err := sshConfig.Get(host, "User")
 	if err != nil {
-		log.Fatalf("Failed to get ssh User from config: %s", err)
+		return nil, fmt.Errorf("failed to get SSH user from config: %s", err)
 	}
 	hostName, err := sshConfig.Get(host, "HostName")
 	if err != nil {
-		log.Fatalf("Failed to get ssh HostName from config: %s", err)
+		return nil, fmt.Errorf("failed to get SSH hostname from config: %s", err)
 	}
 	port, err := sshConfig.Get(host, "Port")
 	if err != nil {
-		log.Fatalf("Failed to get ssh Port from config: %s", err)
+		return nil, fmt.Errorf("failed to get SSH port from config: %s", err)
 	}
 	return &sshHostConfig{host: host, user: user, hostname: hostName, port: port}, nil
 }
@@ -70,23 +71,23 @@ func (w Wireguard) createSSHClient(host string) (string, *ssh.ClientConfig, erro
 	}
 	keyFile, err := os.Open(path)
 	if err != nil {
-		log.Fatalf("Failed to open SSH key: %s", err)
+		return "", nil, fmt.Errorf("Failed to open SSH key: %s", err)
 	}
 	defer keyFile.Close()
 
 	keyBytes, err := io.ReadAll(keyFile)
 	if err != nil {
-		log.Fatalf("Failed to read private key: %s", err)
+		return "", nil, fmt.Errorf("Failed to read private key: %s", err)
 	}
 
 	key, err := ssh.ParsePrivateKey(keyBytes)
 	if err != nil {
-		log.Fatalf("Failed to parse private key: %s", err)
+		return "", nil, fmt.Errorf("Failed to parse private key: %s", err)
 	}
 
 	hostConfig, err := w.getSSHHostConfig(host)
 	if err != nil {
-		log.Fatalf("Failed to create SSH Client: %s\n", err)
+		return "", nil, fmt.Errorf("Failed to create SSH Client: %s\n", err)
 	}
 
 	// Configure SSH client
@@ -105,7 +106,7 @@ func (w Wireguard) createSSHClient(host string) (string, *ssh.ClientConfig, erro
 func (w Wireguard) connectToSSHServer(address string, config ssh.ClientConfig) (*ssh.Client, error) {
 	client, err := ssh.Dial("tcp", address, &config)
 	if err != nil {
-		log.Fatalf("Failed to connect to %s: %s", address, err)
+		return nil, fmt.Errorf("Failed to connect to %s: %s", address, err)
 	}
 
 	return client, nil
