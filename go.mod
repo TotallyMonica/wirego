@@ -1,4 +1,4 @@
-module github.com/TotallyMonica/wireguard-go
+module github.com/TotallyMonica/wirego
 
 go 1.25.0
 

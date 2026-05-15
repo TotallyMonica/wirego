@@ -1,4 +1,4 @@
-package wg
+package wirego
 
 import "fmt"
 

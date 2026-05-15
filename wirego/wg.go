@@ -1,4 +1,4 @@
-package wg
+package wirego
 
 import (
 	"fmt"
@@ -44,7 +44,7 @@ func New(host string) (Wireguard, error) {
 		wireguardInstance.Path = path
 		return wireguardInstance, nil
 	} else {
-		return Wireguard{}, DependencyError{"wg"}
+		return Wireguard{}, DependencyError{"wirego"}
 	}
 }
 
@@ -52,11 +52,11 @@ func (w Wireguard) checkForPrerequisites() (bool, string) {
 	var path string
 	var err error
 
-	var dependencies = []string{"wg"}
+	var dependencies = []string{"wirego"}
 
 	for dependency := range dependencies {
 		if !w.isRemote() {
-			path, err = exec.LookPath("wg")
+			path, err = exec.LookPath("wirego")
 			if err != nil {
 				return false, ""
 			}
@@ -80,7 +80,7 @@ func (w Wireguard) checkForPrerequisites() (bool, string) {
 			if err != nil {
 				return false, ""
 			}
-			if err := session.Start("which wg"); err != nil {
+			if err := session.Start("which wirego"); err != nil {
 				return false, ""
 			}
 			output, err := io.ReadAll(stdout)
@@ -121,8 +121,8 @@ func (w Wireguard) executeCommand() (strings.Builder, strings.Builder, error) {
 		session.Stdout = &stdout
 		session.Stderr = &stderr
 
-		if err := session.Start("wg show all dump"); err != nil {
-			return strings.Builder{}, strings.Builder{}, fmt.Errorf("could not execute `wg show all dump`: %v", err)
+		if err := session.Start("wirego show all dump"); err != nil {
+			return strings.Builder{}, strings.Builder{}, fmt.Errorf("could not execute `wirego show all dump`: %v", err)
 		}
 		if err := session.Wait(); err != nil {
 			return strings.Builder{}, strings.Builder{}, fmt.Errorf("error while waiting for session to finish: %v", err)
